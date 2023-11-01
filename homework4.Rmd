@@ -1,0 +1,86 @@
+---
+title: "homework4"
+author: "cycy"
+date: "2023-10-31"
+output: html_document
+---
+
+```{r}
+library(sf)
+#install.packages("dplyr")
+library(dplyr)
+library(ggplot2)
+#install.packages("plotly")
+library(plotly)
+
+```
+
+```{r}
+# read csv
+gender_inequality_data <- read.csv("C:/Users/admin/OneDrive - University College London/UCL2023/CASA0005/week4/HDR21-22_Composite_indices_complete_time_series.csv")
+
+# read shp
+world_spatial_data <- st_read("C:/Users/admin/OneDrive - University College London/UCL2023/CASA0005/week4/World_Countries_Generalized.shp")
+
+
+```
+
+```{r}
+# filter
+
+gender_inequality_data <- gender_inequality_data %>% 
+  filter(!is.na(gdi_2010) & !is.na(gdi_2019))
+
+```
+
+```{r}
+# Join data sets using left_join
+
+joined_data <- left_join(world_spatial_data, gender_inequality_data, by = c("COUNTRY" = "country"))
+
+```
+
+```{r}
+
+joined_data <- joined_data %>%
+  mutate(inequality_difference = gdi_2019 - gdi_2010)
+
+```
+
+```{r}
+#Because the table is too large, let's separate the new columns and load them separately. 
+#They can't all load at once!
+
+inequality_difference <- joined_data %>%
+  select(COUNTRY, inequality_difference)%>%
+  filter(!is.na(inequality_difference))
+
+```
+
+```{r}
+# use ggplot
+
+ggplot <- ggplot(inequality_difference, aes(x = COUNTRY, y = inequality_difference)) +
+  geom_bar(stat = "identity", fill = "purple", width = 0.3) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(x = "Country", y = "Inequality Difference (2019-2010)") +
+  ggtitle("Gender Inequality Difference Between 2010 and 2019")+
+  theme(axis.text.x = element_text(size = 3))  # 设置字体大小
+
+
+#If stop here, it would be difficult to read the image, the country names on the x-axis would overlap and be too small to read clearly.
+#I tried changing the angle of the x-axis, but the effect was mediocre.
+#I'm thinking of creating an interactive chart using 'plotly'.
+
+
+```
+
+```{r}
+# Convert a ggplot chart into an interactive chart and specify its width and height
+p_interactive <- ggplotly(ggplot, width = 1200, height = 800)
+
+# plot this interactive chart
+p_interactive
+
+
+```
